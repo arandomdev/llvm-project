@@ -3552,6 +3552,10 @@ static void RenderObjCOptions(const ToolChain &TC, const Driver &D,
       CmdArgs.push_back("-fobjc-arc-exceptions");
   }
 
+  if (Args.hasFlag(options::OPT_fobjc_logos, options::OPT_fno_objc_logos, false)) {
+    CmdArgs.push_back("-fobjc-logos");
+  }
+
   // Silence warning for full exception code emission options when explicitly
   // set to use no ARC.
   if (Args.hasArg(options::OPT_fno_objc_arc)) {

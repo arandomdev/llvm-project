@@ -2542,6 +2542,11 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
     if (Args.hasArg(OPT_fobjc_subscripting_legacy_runtime))
       Opts.ObjCSubscriptingLegacyRuntime =
         (Opts.ObjCRuntime.getKind() == ObjCRuntime::FragileMacOSX);
+
+    if (Args.hasFlag(options::OPT_fobjc_logos, options::OPT_fno_objc_logos, false)) {
+      Opts.Logos = 1;
+      llvm::outs() << "Logos Enabled\n";
+    }
   }
 
   if (Arg *A = Args.getLastArg(options::OPT_fgnuc_version_EQ)) {
