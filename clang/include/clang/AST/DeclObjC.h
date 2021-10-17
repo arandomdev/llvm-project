@@ -50,6 +50,7 @@ class Expr;
 class ObjCCategoryDecl;
 class ObjCCategoryImplDecl;
 class ObjCImplementationDecl;
+class ObjCHookDecl;
 class ObjCInterfaceDecl;
 class ObjCIvarDecl;
 class ObjCPropertyDecl;
@@ -2735,6 +2736,42 @@ public:
 };
 
 raw_ostream &operator<<(raw_ostream &OS, const ObjCImplementationDecl &ID);
+
+/// ObjCHook - Represents a hook definition - this is where
+/// method definitions are specified. For example:
+///
+/// @code
+/// \@hook MyClass
+/// - (void)myHook { /* do something */ }
+/// \@end
+/// @endcode
+///
+class ObjCHookDecl : public ObjCImplDecl {
+  ObjCHookDecl(DeclContext *DC,
+               ObjCInterfaceDecl *classInterface,
+               ObjCInterfaceDecl *superDecl,
+               SourceLocation nameLoc, SourceLocation atStartLoc,
+               SourceLocation superLoc = SourceLocation())
+    : ObjCImplDecl(ObjCHook, DC, classInterface,
+                   classInterface ? classInterface->getIdentifier()
+                                  : nullptr,
+                   nameLoc, atStartLoc) {}
+
+  void anchor() override;
+
+public:
+  static ObjCHookDecl *Create(ASTContext &C, DeclContext *DC,
+                              ObjCInterfaceDecl *classInterface,
+                              ObjCInterfaceDecl *superDecl,
+                              SourceLocation nameLoc,
+                              SourceLocation atStartLoc,
+                              SourceLocation superLoc = SourceLocation());
+
+  static bool classof(const Decl *D) { return classofKind(D->getKind()); }
+  static bool classofKind(Kind K) { return K == ObjCHook; }
+};
+
+raw_ostream &operator<<(raw_ostream &OS, const ObjCHookDecl &ID);
 
 /// ObjCCompatibleAliasDecl - Represents alias of a class. This alias is
 /// declared as \@compatibility_alias alias class.

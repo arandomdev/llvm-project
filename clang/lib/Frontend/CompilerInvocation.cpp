@@ -2545,7 +2545,6 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
 
     if (Args.hasFlag(options::OPT_fobjc_logos, options::OPT_fno_objc_logos, false)) {
       Opts.Logos = 1;
-      llvm::outs() << "Logos Enabled\n";
     }
   }
 

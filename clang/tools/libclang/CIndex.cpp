@@ -6389,6 +6389,7 @@ CXCursor clang_getCursorDefinition(CXCursor C) {
   case Decl::TemplateTemplateParm:
   case Decl::ObjCCategoryImpl:
   case Decl::ObjCImplementation:
+  case Decl::ObjCHook:
   case Decl::AccessSpec:
   case Decl::LinkageSpec:
   case Decl::Export:
@@ -7850,6 +7851,7 @@ static CXLanguageKind getDeclLanguage(const Decl *D) {
   case Decl::ObjCCategoryImpl:
   case Decl::ObjCCompatibleAlias:
   case Decl::ObjCImplementation:
+  case Decl::ObjCHook:
   case Decl::ObjCInterface:
   case Decl::ObjCIvar:
   case Decl::ObjCMethod:

@@ -2245,6 +2245,25 @@ raw_ostream &clang::operator<<(raw_ostream &OS,
 }
 
 //===----------------------------------------------------------------------===//
+// ObjCHookDecl
+//===----------------------------------------------------------------------===//
+
+void ObjCHookDecl::anchor() {}
+
+ObjCHookDecl *
+ObjCHookDecl::Create(ASTContext &C, DeclContext *DC,
+                     ObjCInterfaceDecl *ClassInterface,
+                     ObjCInterfaceDecl *SuperDecl,
+                     SourceLocation nameLoc,
+                     SourceLocation atStartLoc,
+                     SourceLocation superLoc) {
+  if (ClassInterface && ClassInterface->hasDefinition())
+    ClassInterface = ClassInterface->getDefinition();
+  return new (C, DC) ObjCHookDecl(DC, ClassInterface, SuperDecl,
+                                  nameLoc, atStartLoc, superLoc);
+}
+
+//===----------------------------------------------------------------------===//
 // ObjCCompatibleAliasDecl
 //===----------------------------------------------------------------------===//
 

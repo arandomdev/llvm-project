@@ -845,6 +845,7 @@ unsigned Decl::getIdentifierNamespaceForKind(Kind DeclKind) {
     case VarTemplateSpecialization:
     case VarTemplatePartialSpecialization:
     case ObjCImplementation:
+    case ObjCHook:
     case ObjCCategory:
     case ObjCCategoryImpl:
     case Import:
@@ -1255,6 +1256,7 @@ DeclContext *DeclContext::getPrimaryContext() {
     return this;
 
   case Decl::ObjCImplementation:
+  case Decl::ObjCHook:
   case Decl::ObjCCategoryImpl:
     return this;
 
