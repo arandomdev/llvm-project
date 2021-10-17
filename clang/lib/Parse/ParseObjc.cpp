@@ -45,6 +45,7 @@ void Parser::MaybeSkipAttributes(tok::ObjCKeywordKind Kind) {
 /// [OBJC]  objc-protocol-definition
 /// [OBJC]  objc-method-definition
 /// [OBJC]  '@' 'end'
+/// [OBJC-LOGOS] objc-hook-definition
 Parser::DeclGroupPtrTy
 Parser::ParseObjCAtDirectives(ParsedAttributesWithRange &Attrs) {
   SourceLocation AtLoc = ConsumeToken(); // the "@"
@@ -66,6 +67,16 @@ Parser::ParseObjCAtDirectives(ParsedAttributesWithRange &Attrs) {
     return ParseObjCAtProtocolDeclaration(AtLoc, Attrs);
   case tok::objc_implementation:
     return ParseObjCAtImplementationDeclaration(AtLoc, Attrs);
+  case tok::objc_hook:
+    if (getLangOpts().Logos) {
+      return ParseObjCAtHookDeclaration(AtLoc, Attrs);
+    }
+    else {
+      Diag(AtLoc, diag::err_unexpected_at);
+      SkipUntil(tok::semi);
+      SingleDecl = nullptr;
+      break;
+    }
   case tok::objc_end:
     return ParseObjCAtEndDeclaration(AtLoc);
   case tok::objc_compatibility_alias:
@@ -701,6 +712,7 @@ void Parser::ParseObjCInterfaceDeclList(tok::ObjCKeywordKind contextKey,
       break;
 
     case tok::objc_implementation:
+    case tok::objc_hook:
     case tok::objc_interface:
       Diag(AtLoc, diag::err_objc_missing_end)
           << FixItHint::CreateInsertion(AtLoc, "@end\n");
@@ -2224,6 +2236,88 @@ Parser::ParseObjCAtImplementationDeclaration(SourceLocation AtLoc,
   }
 
   return Actions.ActOnFinishObjCImplementation(ObjCImpDecl, DeclsInGroup);
+}
+
+Parser::DeclGroupPtrTy
+Parser::ParseObjCAtHookDeclaration(SourceLocation AtLoc,
+                                   ParsedAttributes &Attrs) {
+  assert(Tok.isObjCAtKeyword(tok::objc_hook) &&
+         "ParseObjCAtHookDeclaration(): Expected @hook");
+
+  CheckNestedObjCContexts(AtLoc);
+  ConsumeToken(); // the "hook" identifier
+
+  // LOGOS-TODO: Code Complete
+
+  MaybeSkipAttributes(tok::objc_hook);
+
+  if (expectIdentifier())
+    return nullptr; // missing class name.
+
+  // we have a class name - consume it
+  IdentifierInfo *nameId = Tok.getIdentifierInfo();
+  SourceLocation nameLoc = ConsumeToken();  // consume class name
+  Decl *ObjCHookDecl = nullptr;
+
+  // Neither a type parameter list nor a list of protocol references is
+  // permitted here. Parse and diagnose them.
+  if (Tok.is(tok::less)) {
+    SourceLocation lAngleLoc, rAngleLoc;
+    SmallVector<IdentifierLocPair, 8> protocolIdents;
+    SourceLocation diagLoc = Tok.getLocation();
+    ObjCTypeParamListScope typeParamScope(Actions, getCurScope());
+    if (parseObjCTypeParamListOrProtocolRefs(typeParamScope, lAngleLoc,
+                                             protocolIdents, rAngleLoc)) {
+      Diag(diagLoc, diag::err_objc_parameterized_hook)
+        << SourceRange(diagLoc, PrevTokLocation);
+    } else if (lAngleLoc.isValid()) {
+      Diag(lAngleLoc, diag::err_unexpected_protocol_qualifier)
+        << FixItHint::CreateRemoval(SourceRange(lAngleLoc, rAngleLoc));
+    }
+  }
+
+  if (Tok.is(tok::l_paren)) {
+    // Do not allow a category implementation
+    SourceLocation lParenLoc = Tok.getLocation();
+    Diag(lParenLoc, diag::err_objc_unexpected_category)
+      << FixItHint::CreateRemoval(SourceRange(lParenLoc));
+
+    return nullptr;
+  }
+
+  SourceLocation superClassLoc;
+  IdentifierInfo *superClassId = nullptr;
+  if (TryConsumeToken(tok::colon)) {
+    // We have a super class
+    if (expectIdentifier())
+      return nullptr; // missing super class name.
+    superClassId = Tok.getIdentifierInfo();
+    superClassLoc = ConsumeToken(); // Consume super class name
+  }
+
+  ObjCHookDecl = Actions.ActOnStartHookImplementation(
+      AtLoc, nameId, nameLoc, superClassId, superClassLoc, Attrs);
+
+  // LOGOS-TODO: Ivars
+  if (Tok.is(tok::less))
+    Diag(Tok, diag::err_unexpected_protocol_qualifier);
+
+  assert(ObjCHookDecl);
+
+  SmallVector<Decl *, 8> DeclsInGroup;
+  {
+    ObjCImplParsingDataRAII ObjCImplParsing(*this, ObjCHookDecl);
+    while (!ObjCImplParsing.isFinished() && !isEofOrEom()) {
+      ParsedAttributesWithRange attrs(AttrFactory);
+      MaybeParseCXX11Attributes(attrs);
+      if (DeclGroupPtrTy DGP = ParseExternalDeclaration(attrs)) {
+        DeclGroupRef DG = DGP.get();
+        DeclsInGroup.append(DG.begin(), DG.end());
+      }
+    }
+  }
+
+  return Actions.ActOnFinishObjCImplementation(ObjCHookDecl, DeclsInGroup);
 }
 
 Parser::DeclGroupPtrTy

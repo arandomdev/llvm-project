@@ -9418,6 +9418,13 @@ public:
                                       SourceLocation SuperClassLoc,
                                       const ParsedAttributesView &AttrList);
 
+  Decl *ActOnStartHookImplementation(SourceLocation AtHookImplLoc,
+                                     IdentifierInfo *ClassName,
+                                     SourceLocation ClassLoc,
+                                     IdentifierInfo *SuperClassname,
+                                     SourceLocation SuperClassLoc,
+                                     const ParsedAttributesView &AttrList);
+
   Decl *ActOnStartCategoryImplementation(SourceLocation AtCatImplLoc,
                                          IdentifierInfo *ClassName,
                                          SourceLocation ClassLoc,

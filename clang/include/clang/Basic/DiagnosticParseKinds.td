@@ -1428,6 +1428,12 @@ def warn_pragma_force_cuda_host_device_bad_arg : Warning<
 def err_pragma_cannot_end_force_cuda_host_device : Error<
   "force_cuda_host_device end pragma without matching "
   "force_cuda_host_device begin">;
+
+/// ObjC Logos Parser diagnostics
+def err_objc_parameterized_hook : Error<
+  "@hook cannot have type parameters">;
+def err_objc_unexpected_category : Error<
+  "unexpected category definition after @hook">;
 } // end of Parse Issue category.
 
 let CategoryName = "Modules Issue" in {

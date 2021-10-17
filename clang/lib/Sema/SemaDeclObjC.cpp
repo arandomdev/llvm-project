@@ -2098,6 +2098,122 @@ Decl *Sema::ActOnStartClassImplementation(
   return ActOnObjCContainerStartDefinition(IMPDecl);
 }
 
+Decl *Sema::ActOnStartHookImplementation(
+                      SourceLocation AtHookImplLoc,
+                      IdentifierInfo *ClassName,
+                      SourceLocation ClassLoc,
+                      IdentifierInfo *SuperClassname,
+                      SourceLocation SuperClassLoc,
+                      const ParsedAttributesView &Attrs) {
+  ObjCInterfaceDecl *IDecl = nullptr;
+  // Check for another declaration kind with the same name.
+  NamedDecl *PrevDecl
+    = LookupSingleName(TUScope, ClassName, ClassLoc, LookupOrdinaryName,
+                       forRedeclarationInCurContext());
+  if (PrevDecl && !isa<ObjCInterfaceDecl>(PrevDecl)) {
+    Diag(ClassLoc, diag::err_redefinition_different_kind) << ClassName;
+    Diag(PrevDecl->getLocation(), diag::note_previous_definition);
+  } else if ((IDecl = dyn_cast_or_null<ObjCInterfaceDecl>(PrevDecl))) {
+    // FIXME: This will produce an error if the definition of the interface has
+    // been imported from a module but is not visible.
+    RequireCompleteType(ClassLoc, Context.getObjCInterfaceType(IDecl),
+                        diag::warn_undef_interface);
+  } else {
+    // We did not find anything with the name ClassName; try to correct for
+    // typos in the class name.
+    ObjCInterfaceValidatorCCC CCC{};
+    TypoCorrection Corrected =
+        CorrectTypo(DeclarationNameInfo(ClassName, ClassLoc),
+                    LookupOrdinaryName, TUScope, nullptr, CCC, CTK_NonError);
+    if (Corrected.getCorrectionDeclAs<ObjCInterfaceDecl>()) {
+      // Suggest the (potentially) correct interface name. Don't provide a
+      // code-modification hint or use the typo name for recovery, because
+      // this is just a warning. The program may actually be correct.
+      diagnoseTypo(Corrected,
+                   PDiag(diag::warn_undef_interface_suggest) << ClassName,
+                   /*ErrorRecovery*/false);
+    } else {
+      Diag(ClassLoc, diag::warn_undef_interface) << ClassName;
+    }
+  }
+
+  // Check that super class name is valid class name
+  ObjCInterfaceDecl *SDecl = nullptr;
+  if (SuperClassname) {
+    // Check if a different kind of symbol declared in this scope.
+    PrevDecl = LookupSingleName(TUScope, SuperClassname, SuperClassLoc,
+                                LookupOrdinaryName);
+    if (PrevDecl && !isa<ObjCInterfaceDecl>(PrevDecl)) {
+      Diag(SuperClassLoc, diag::err_redefinition_different_kind)
+        << SuperClassname;
+      Diag(PrevDecl->getLocation(), diag::note_previous_definition);
+    } else {
+      SDecl = dyn_cast_or_null<ObjCInterfaceDecl>(PrevDecl);
+      if (SDecl && !SDecl->hasDefinition())
+        SDecl = nullptr;
+      if (!SDecl)
+        Diag(SuperClassLoc, diag::err_undef_superclass)
+          << SuperClassname << ClassName;
+      else if (IDecl && !declaresSameEntity(IDecl->getSuperClass(), SDecl)) {
+        // This implementation and its interface do not have the same
+        // super class.
+        Diag(SuperClassLoc, diag::err_conflicting_super_class)
+          << SDecl->getDeclName();
+        Diag(SDecl->getLocation(), diag::note_previous_definition);
+      }
+    }
+  }
+
+  if (!IDecl) {
+    // Legacy case of @implementation with no corresponding @interface.
+    // Build, chain & install the interface decl into the identifier.
+
+    // FIXME: Do we support attributes on the @implementation? If so we should
+    // copy them over.
+    IDecl = ObjCInterfaceDecl::Create(Context, CurContext, AtHookImplLoc,
+                                      ClassName, /*typeParamList=*/nullptr,
+                                      /*PrevDecl=*/nullptr, ClassLoc,
+                                      true);
+    AddPragmaAttributes(TUScope, IDecl);
+    IDecl->startDefinition();
+    if (SDecl) {
+      IDecl->setSuperClass(Context.getTrivialTypeSourceInfo(
+                             Context.getObjCInterfaceType(SDecl),
+                             SuperClassLoc));
+      IDecl->setEndOfDefinitionLoc(SuperClassLoc);
+    } else {
+      IDecl->setEndOfDefinitionLoc(ClassLoc);
+    }
+
+    PushOnScopeChains(IDecl, TUScope);
+  } else {
+    // Mark the interface as being completed, even if it was just as
+    //   @class ....;
+    // declaration; the user cannot reopen it.
+    if (!IDecl->hasDefinition())
+      IDecl->startDefinition();
+  }
+
+  ObjCHookDecl * HookDecl =
+    ObjCHookDecl::Create(Context, CurContext, IDecl, SDecl,
+                         ClassLoc, AtHookImplLoc, SuperClassLoc);
+
+  ProcessDeclAttributeList(TUScope, HookDecl, Attrs);
+  AddPragmaAttributes(TUScope, HookDecl);
+
+  if (CheckObjCDeclScope(HookDecl))
+    return ActOnObjCContainerStartDefinition(HookDecl);
+
+  // LOGOS-TODO: Check for duplicate hooks
+
+  PushOnScopeChains(HookDecl, TUScope);
+  // Warn on implementating deprecated class under
+  // -Wdeprecated-implementations flag.
+  DiagnoseObjCImplementedDeprecations(*this, IDecl, HookDecl->getLocation());
+
+  return ActOnObjCContainerStartDefinition(HookDecl);
+}
+
 Sema::DeclGroupPtrTy
 Sema::ActOnFinishObjCImplementation(Decl *ObjCImpDecl, ArrayRef<Decl *> Decls) {
   SmallVector<Decl *, 64> DeclsInGroup;
