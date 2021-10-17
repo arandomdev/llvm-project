@@ -2276,6 +2276,7 @@ Parser::ParseObjCAtHookDeclaration(SourceLocation AtLoc,
     }
   }
 
+  // LOGOS-TODO: Maybe use this as a group system?
   if (Tok.is(tok::l_paren)) {
     // Do not allow a category implementation
     SourceLocation lParenLoc = Tok.getLocation();

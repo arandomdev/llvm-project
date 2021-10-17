@@ -5658,11 +5658,19 @@ void CodeGenModule::EmitTopLevelDecl(Decl *D) {
             OMD->getClassInterface()), OMD->getLocation());
     break;
   }
+  case Decl::ObjCHook: {
+    // LOGOS-TODO: Generate constructor for objc hook
+  }
   case Decl::ObjCMethod: {
     auto *OMD = cast<ObjCMethodDecl>(D);
     // If this is not a prototype, emit the body.
-    if (OMD->getBody())
-      CodeGenFunction(*this).GenerateObjCMethod(OMD);
+    if (OMD->getBody()) {
+      if (isa<ObjCHookDecl>(OMD->getDeclContext())) {
+        CodeGenFunction(*this).GenerateLogosMethodHook(OMD, cast<ObjCHookDecl>(OMD->getDeclContext()));
+      } else {
+        CodeGenFunction(*this).GenerateObjCMethod(OMD);
+      }
+    }
     break;
   }
   case Decl::ObjCCompatibleAlias:
