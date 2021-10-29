@@ -2247,7 +2247,12 @@ Parser::ParseObjCAtHookDeclaration(SourceLocation AtLoc,
   CheckNestedObjCContexts(AtLoc);
   ConsumeToken(); // the "hook" identifier
 
-  // LOGOS-TODO: Code Complete
+  // Code completion after '@hook'.
+  if (Tok.is(tok::code_completion)) {
+    Actions.CodeCompleteObjCImplementationDecl(getCurScope());
+    cutOffParsing();
+    return nullptr;
+  }
 
   MaybeSkipAttributes(tok::objc_hook);
 

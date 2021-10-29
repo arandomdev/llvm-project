@@ -2658,7 +2658,10 @@ enum CXCursorKind {
   /**
    * A code completion overload candidate.
    */
-  CXCursor_OverloadCandidate = 700
+  CXCursor_OverloadCandidate = 700,
+
+  /** An Objective-C Logos \@hook. */
+  CXCursor_ObjCHookDecl = 800
 };
 
 /**

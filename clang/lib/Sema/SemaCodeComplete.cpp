@@ -3755,6 +3755,8 @@ CXCursorKind clang::getCursorKindForDecl(const Decl *D) {
     return CXCursor_ObjCCategoryImplDecl;
   case Decl::ObjCImplementation:
     return CXCursor_ObjCImplementationDecl;
+  case Decl::ObjCHook:
+    return CXCursor_ObjCHookDecl;
 
   case Decl::ObjCInterface:
     return CXCursor_ObjCInterfaceDecl;
@@ -8715,6 +8717,9 @@ void Sema::CodeCompleteObjCMethodDecl(Scope *S, Optional<bool> IsInstanceMethod,
   if (Decl *D = IDecl) {
     if (ObjCImplementationDecl *Impl = dyn_cast<ObjCImplementationDecl>(D)) {
       SearchDecl = Impl->getClassInterface();
+      IsInImplementation = true;
+    } else if (ObjCHookDecl *Hook = dyn_cast<ObjCHookDecl>(D)) {
+      SearchDecl = Hook->getClassInterface();
       IsInImplementation = true;
     } else if (ObjCCategoryImplDecl *CatImpl =
                    dyn_cast<ObjCCategoryImplDecl>(D)) {

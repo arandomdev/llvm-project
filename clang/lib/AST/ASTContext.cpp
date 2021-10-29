@@ -2769,6 +2769,16 @@ ObjCImplementationDecl *ASTContext::getObjCImplementation(ObjCInterfaceDecl *D) 
   return nullptr;
 }
 
+/// Get the hook of ObjCInterfaceDecl, or nullptr if none
+/// exists.
+ObjCHookDecl *ASTContext::getObjCHook(ObjCInterfaceDecl *D) {
+  llvm::DenseMap<ObjCContainerDecl*, ObjCImplDecl*>::iterator
+    I = ObjCImpls.find(D);
+  if (I != ObjCImpls.end())
+    return cast<ObjCHookDecl>(I->second);
+  return nullptr;
+}
+
 /// Get the implementation of ObjCCategoryDecl, or nullptr if none
 /// exists.
 ObjCCategoryImplDecl *ASTContext::getObjCImplementation(ObjCCategoryDecl *D) {
@@ -2784,6 +2794,13 @@ void ASTContext::setObjCImplementation(ObjCInterfaceDecl *IFaceD,
                            ObjCImplementationDecl *ImplD) {
   assert(IFaceD && ImplD && "Passed null params");
   ObjCImpls[IFaceD] = ImplD;
+}
+
+/// Set the hook of ObjCInterfaceDecl.
+void ASTContext::setObjCHook(ObjCInterfaceDecl *IFaceD,
+                           ObjCHookDecl *HookD) {
+  assert(IFaceD && ImplD && "Passed null params");
+  ObjCImpls[IFaceD] = HookD;
 }
 
 /// Set the implementation of ObjCCategoryDecl.

@@ -14190,7 +14190,8 @@ Decl *Sema::ActOnStartOfFunctionDef(Scope *FnBodyScope, Decl *D,
   ActOnDocumentableDecl(D);
   if (getCurLexicalContext()->isObjCContainer() &&
       getCurLexicalContext()->getDeclKind() != Decl::ObjCCategoryImpl &&
-      getCurLexicalContext()->getDeclKind() != Decl::ObjCImplementation)
+      getCurLexicalContext()->getDeclKind() != Decl::ObjCImplementation &&
+      getCurLexicalContext()->getDeclKind() != Decl::ObjCHook)
     Diag(FD->getLocation(), diag::warn_function_def_in_objc_container);
 
   return D;
@@ -17099,6 +17100,10 @@ void Sema::ActOnFields(Scope *S, SourceLocation RecLoc, Decl *EnclosingDecl,
     case Decl::ObjCImplementation:
       Context.
         ResetObjCLayout(cast<ObjCImplementationDecl>(DC)->getClassInterface());
+      break;
+    case Decl::ObjCHook:
+      Context.
+        ResetObjCLayout(cast<ObjCHookDecl>(DC)->getClassInterface());
       break;
     }
   }

@@ -459,6 +459,19 @@ public:
     return true;
   }
 
+  bool VisitObjCHookDecl(const ObjCHookDecl *D) {
+    const ObjCInterfaceDecl *Class = D->getClassInterface();
+    if (!Class)
+      return true;
+
+    if (Class->isImplicitInterfaceDecl())
+      IndexCtx.handleDecl(Class);
+
+    TRY_DECL(D, IndexCtx.handleDecl(D));
+
+    return true;
+  }
+
   bool VisitObjCCategoryDecl(const ObjCCategoryDecl *D) {
     if (!IndexCtx.shouldIndex(D))
       return true;

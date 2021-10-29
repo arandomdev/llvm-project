@@ -22,6 +22,7 @@
 #include "CursorVisitor.h"
 #include "clang-c/FatalErrorHandler.h"
 #include "clang/AST/Attr.h"
+#include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclObjCCommon.h"
 #include "clang/AST/Mangle.h"
 #include "clang/AST/OpenMPClause.h"
@@ -1203,6 +1204,20 @@ bool CursorVisitor::VisitObjCCategoryImplDecl(ObjCCategoryImplDecl *D) {
 }
 
 bool CursorVisitor::VisitObjCImplementationDecl(ObjCImplementationDecl *D) {
+#if 0
+  // Issue callbacks for super class.
+  // FIXME: No source location information!
+  if (D->getSuperClass() &&
+      Visit(MakeCursorObjCSuperClassRef(D->getSuperClass(),
+                                        D->getSuperClassLoc(),
+                                        TU)))
+    return true;
+#endif
+
+  return VisitObjCImplDecl(D);
+}
+
+bool CursorVisitor::VisitObjCHookDecl(ObjCHookDecl *D) {
 #if 0
   // Issue callbacks for super class.
   // FIXME: No source location information!
@@ -4868,7 +4883,7 @@ CXStringSet *clang_Cursor_getObjCManglings(CXCursor C) {
     return nullptr;
 
   const Decl *D = getCursorDecl(C);
-  if (!(isa<ObjCInterfaceDecl>(D) || isa<ObjCImplementationDecl>(D)))
+  if (!(isa<ObjCInterfaceDecl>(D) || isa <ObjCImplementationDecl>(D) || isa <ObjCHookDecl>(D)))
     return nullptr;
 
   ASTContext &Ctx = D->getASTContext();
@@ -5191,6 +5206,8 @@ CXString clang_getCursorKindSpelling(enum CXCursorKind Kind) {
     return cxstring::createRef("ObjCClassMethodDecl");
   case CXCursor_ObjCImplementationDecl:
     return cxstring::createRef("ObjCImplementationDecl");
+  case CXCursor_ObjCHookDecl:
+    return cxstring::createRef("ObjCHookDecl");
   case CXCursor_ObjCCategoryImplDecl:
     return cxstring::createRef("ObjCCategoryImplDecl");
   case CXCursor_CXXMethod:
@@ -6507,12 +6524,19 @@ CXCursor clang_getCursorDefinition(CXCursor C) {
     // @implementation, if we have it.
     // FIXME: The ASTs should make finding the definition easier.
     if (const ObjCInterfaceDecl *Class =
-            dyn_cast<ObjCInterfaceDecl>(Method->getDeclContext()))
+            dyn_cast<ObjCInterfaceDecl>(Method->getDeclContext())) {
       if (ObjCImplementationDecl *ClassImpl = Class->getImplementation())
         if (ObjCMethodDecl *Def = ClassImpl->getMethod(
                 Method->getSelector(), Method->isInstanceMethod()))
           if (Def->isThisDeclarationADefinition())
             return MakeCXCursor(Def, TU);
+
+      if (ObjCHookDecl *HookImpl = Class->getHook())
+        if (ObjCMethodDecl *Def = HookImpl->getMethod(
+                Method->getSelector(), Method->isInstanceMethod()))
+          if (Def->isThisDeclarationADefinition())
+            return MakeCXCursor(Def, TU);
+    }
 
     return clang_getNullCursor();
   }
@@ -6539,8 +6563,11 @@ CXCursor clang_getCursorDefinition(CXCursor C) {
     if (WasReference) {
       if (const ObjCInterfaceDecl *Def = IFace->getDefinition())
         return MakeCXCursor(Def, TU);
-    } else if (ObjCImplementationDecl *Impl = IFace->getImplementation())
+    } else if (ObjCImplementationDecl *Impl = IFace->getImplementation()) {
       return MakeCXCursor(Impl, TU);
+    } else if (ObjCHookDecl *Hook = IFace->getHook()) {
+      return MakeCXCursor(Hook, TU);
+    }
     return clang_getNullCursor();
   }
 

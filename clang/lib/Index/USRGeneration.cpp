@@ -421,6 +421,7 @@ void USRGenerator::VisitObjCContainerDecl(const ObjCContainerDecl *D,
       llvm_unreachable("Invalid ObjC container.");
     case Decl::ObjCInterface:
     case Decl::ObjCImplementation:
+    case Decl::ObjCHook:
       GenObjCClass(D->getName(), GetExternalSourceContainer(D),
                    GetExternalSourceContainer(CatD));
       break;

@@ -1596,6 +1596,23 @@ void ObjCInterfaceDecl::setImplementation(ObjCImplementationDecl *ImplD) {
   getASTContext().setObjCImplementation(getDefinition(), ImplD);
 }
 
+ObjCHookDecl *ObjCInterfaceDecl::getHook() const {
+  if (const ObjCInterfaceDecl *Def = getDefinition()) {
+    if (data().ExternallyCompleted)
+      LoadExternalDefinition();
+
+    return getASTContext().getObjCHook(
+             const_cast<ObjCInterfaceDecl*>(Def));
+  }
+
+  // FIXME: Should make sure no callers ever do this.
+  return nullptr;
+}
+
+void ObjCInterfaceDecl::setHook(ObjCHookDecl *HookD) {
+  getASTContext().setObjCHook(getDefinition(), HookD);
+}
+
 namespace {
 
 struct SynthesizeIvarChunk {

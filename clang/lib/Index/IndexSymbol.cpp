@@ -187,12 +187,13 @@ SymbolInfo index::getSymbolInfo(const Decl *D) {
     case Decl::EnumConstant:
       Info.Kind = SymbolKind::EnumConstant; break;
     case Decl::ObjCInterface:
-    case Decl::ObjCImplementation: {
+    case Decl::ObjCImplementation:
+    case Decl::ObjCHook: {
       Info.Kind = SymbolKind::Class;
       Info.Lang = SymbolLanguage::ObjC;
       const ObjCInterfaceDecl *ClsD = dyn_cast<ObjCInterfaceDecl>(D);
       if (!ClsD)
-        ClsD = cast<ObjCImplementationDecl>(D)->getClassInterface();
+        ClsD = cast<ObjCImplDecl>(D)->getClassInterface();
       if (isUnitTestCase(ClsD))
         Info.Properties |= (SymbolPropertySet)SymbolProperty::UnitTest;
       break;

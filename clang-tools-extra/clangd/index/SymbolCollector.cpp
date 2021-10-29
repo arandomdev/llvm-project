@@ -238,6 +238,7 @@ bool SymbolCollector::shouldCollectSymbol(const NamedDecl &ND,
   case Decl::ObjCCategory:
   case Decl::ObjCCategoryImpl:
   case Decl::ObjCImplementation:
+  case Decl::ObjCHook:
     break;
   default:
     // Record has a few derivations (e.g. CXXRecord, Class specialization), it's
@@ -283,6 +284,15 @@ bool SymbolCollector::handleDeclOccurrence(
   // Avoid treating ObjCImplementationDecl as a canonical declaration if it has
   // a corresponding non-implicit and non-forward declared ObjcInterfaceDecl.
   if (const auto *IID = dyn_cast<ObjCImplementationDecl>(D)) {
+    DeclIsCanonical = true;
+    if (const auto *CID = IID->getClassInterface())
+      if (const auto *DD = CID->getDefinition())
+        if (!DD->isImplicitInterfaceDecl())
+          D = DD;
+  }
+  // Avoid treating ObjCHookDecl as a canonical declaration if it has
+  // a corresponding non-implicit and non-forward declared ObjcInterfaceDecl.
+  if (const auto *IID = dyn_cast<ObjCHookDecl>(D)) {
     DeclIsCanonical = true;
     if (const auto *CID = IID->getClassInterface())
       if (const auto *DD = CID->getDefinition())

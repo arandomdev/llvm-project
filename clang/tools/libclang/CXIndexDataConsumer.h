@@ -390,6 +390,7 @@ public:
 
   bool handleObjCInterface(const ObjCInterfaceDecl *D);
   bool handleObjCImplementation(const ObjCImplementationDecl *D);
+  bool handleObjCHook(const ObjCHookDecl *D);
 
   bool handleObjCProtocol(const ObjCProtocolDecl *D);
 

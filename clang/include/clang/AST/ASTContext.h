@@ -2760,6 +2760,10 @@ public:
   /// none exists.
   ObjCImplementationDecl *getObjCImplementation(ObjCInterfaceDecl *D);
 
+  /// Get the hook of the ObjCInterfaceDecl \p D, or nullptr if
+  /// none exists.
+  ObjCHookDecl *getObjCHook(ObjCInterfaceDecl *D);
+
   /// Get the implementation of the ObjCCategoryDecl \p D, or nullptr if
   /// none exists.
   ObjCCategoryImplDecl *getObjCImplementation(ObjCCategoryDecl *D);
@@ -2772,6 +2776,10 @@ public:
   /// Set the implementation of ObjCInterfaceDecl.
   void setObjCImplementation(ObjCInterfaceDecl *IFaceD,
                              ObjCImplementationDecl *ImplD);
+
+  /// Set the hook of ObjCInterfaceDecl.
+  void setObjCHook(ObjCInterfaceDecl *IFaceD,
+                   ObjCHookDecl *HookD);
 
   /// Set the implementation of ObjCCategoryDecl.
   void setObjCImplementation(ObjCCategoryDecl *CatD,

@@ -399,6 +399,14 @@ public:
         if (const auto *DD = CID->getDefinition())
           if (!DD->isImplicitInterfaceDecl())
             D = DD;
+    } else if (const ObjCHookDecl *IID =
+                   dyn_cast<ObjCHookDecl>(D)) {
+      // Treat ObjC{Interface,Hook}Decl as if they were a decl/hook
+      // pair as long as the interface isn't implicit.
+      if (const auto *CID = IID->getClassInterface())
+        if (const auto *DD = CID->getDefinition())
+          if (!DD->isImplicitInterfaceDecl())
+            D = DD;
     } else if (const ObjCCategoryImplDecl *CID =
                    dyn_cast<ObjCCategoryImplDecl>(D)) {
       // Treat ObjC{Category,CategoryImpl}Decl as if they were a decl/def pair.

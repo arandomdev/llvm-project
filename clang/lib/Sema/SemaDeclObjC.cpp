@@ -2204,12 +2204,20 @@ Decl *Sema::ActOnStartHookImplementation(
   if (CheckObjCDeclScope(HookDecl))
     return ActOnObjCContainerStartDefinition(HookDecl);
 
-  // LOGOS-TODO: Check for duplicate hooks
-
-  PushOnScopeChains(HookDecl, TUScope);
-  // Warn on implementating deprecated class under
-  // -Wdeprecated-implementations flag.
-  DiagnoseObjCImplementedDeprecations(*this, IDecl, HookDecl->getLocation());
+  // Check that there is no duplicate implementation of this class.
+  if (IDecl->getHook()) {
+    // FIXME: Don't leak everything!
+    Diag(ClassLoc, diag::err_dup_implementation_class) << ClassName;
+    Diag(IDecl->getHook()->getLocation(),
+         diag::note_previous_definition);
+    HookDecl->setInvalidDecl();
+  } else { // add it to the list.
+    IDecl->setHook(HookDecl);
+    PushOnScopeChains(HookDecl, TUScope);
+    // Warn on implementating deprecated class under
+    // -Wdeprecated-implementations flag.
+    DiagnoseObjCImplementedDeprecations(*this, IDecl, HookDecl->getLocation());
+  }
 
   return ActOnObjCContainerStartDefinition(HookDecl);
 }

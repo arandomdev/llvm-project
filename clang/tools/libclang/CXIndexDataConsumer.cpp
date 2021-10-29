@@ -80,6 +80,11 @@ public:
     return true;
   }
 
+  bool VisitObjCHookDecl(const ObjCHookDecl *D) {
+    DataConsumer.handleObjCHook(D);
+    return true;
+  }
+
   bool VisitObjCCategoryDecl(const ObjCCategoryDecl *D) {
     DataConsumer.handleObjCCategory(D);
     return true;
@@ -709,6 +714,14 @@ bool CXIndexDataConsumer::handleObjCImplementation(
   return handleObjCContainer(D, D->getLocation(), getCursor(D), ContDInfo);
 }
 
+bool CXIndexDataConsumer::handleObjCHook(
+                                              const ObjCHookDecl *D) {
+  ObjCContainerDeclInfo ContDInfo(/*isForwardRef=*/false,
+                      /*isRedeclaration=*/true,
+                      /*isImplementation=*/true);
+  return handleObjCContainer(D, D->getLocation(), getCursor(D), ContDInfo);
+}
+
 bool CXIndexDataConsumer::handleObjCProtocol(const ObjCProtocolDecl *D) {
   if (!D->isThisDeclarationADefinition()) {
     if (shouldSuppressRefs() && markEntityOccurrenceInFile(D, D->getLocation()))
@@ -1035,6 +1048,9 @@ const NamedDecl *CXIndexDataConsumer::getEntityDecl(const NamedDecl *D) const {
                ImplD = dyn_cast<ObjCImplementationDecl>(D)) {
     return getEntityDecl(ImplD->getClassInterface());
 
+  } else if (const ObjCHookDecl *
+               HookD = dyn_cast<ObjCHookDecl>(D)) {
+    return getEntityDecl(HookD->getClassInterface());
   } else if (const ObjCCategoryImplDecl *
                CatImplD = dyn_cast<ObjCCategoryImplDecl>(D)) {
     return getEntityDecl(CatImplD->getCategoryDecl());

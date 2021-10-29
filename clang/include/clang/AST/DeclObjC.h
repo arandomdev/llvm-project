@@ -1356,6 +1356,9 @@ public:
   ObjCImplementationDecl *getImplementation() const;
   void setImplementation(ObjCImplementationDecl *ImplD);
 
+  ObjCHookDecl *getHook() const;
+  void setHook(ObjCHookDecl *HookD);
+
   ObjCCategoryDecl *FindCategoryDeclaration(IdentifierInfo *CategoryId) const;
 
   // Get the local instance/class method declared in a category.
