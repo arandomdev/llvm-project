@@ -2544,6 +2544,11 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
         (Opts.ObjCRuntime.getKind() == ObjCRuntime::FragileMacOSX);
   }
 
+  if (Args.hasFlag(options::OPT_fobjc_logos, options::OPT_fno_objc_logos, false)) {
+    Opts.Logos = 1;
+    llvm::outs() << "Logos Enabled\n";
+  }
+
   if (Arg *A = Args.getLastArg(options::OPT_fgnuc_version_EQ)) {
     // Check that the version has 1 to 3 components and the minor and patch
     // versions fit in two decimal digits.
