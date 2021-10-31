@@ -315,6 +315,7 @@ serialization::getDefinitiveDeclContext(const DeclContext *DC) {
   case Decl::ObjCCategory:
   case Decl::ObjCCategoryImpl:
   case Decl::ObjCImplementation:
+  case Decl::ObjCHook:
     return DC;
 
   case Decl::ObjCProtocol:
@@ -395,6 +396,7 @@ bool serialization::isRedeclarableDeclKind(unsigned Kind) {
   case Decl::ObjCCategoryImpl:
   case Decl::ObjCImplementation:
   case Decl::ObjCProperty:
+  case Decl::ObjCHook:
   case Decl::ObjCCompatibleAlias:
   case Decl::LinkageSpec:
   case Decl::Export:

@@ -461,6 +461,7 @@ RegistryMaps::RegistryMaps() {
   REGISTER_MATCHER(objcCategoryImplDecl);
   REGISTER_MATCHER(objcFinallyStmt);
   REGISTER_MATCHER(objcImplementationDecl);
+  REGISTER_MATCHER(objcHookDecl);
   REGISTER_MATCHER(objcInterfaceDecl);
   REGISTER_MATCHER(objcIvarDecl);
   REGISTER_MATCHER(objcIvarRefExpr);

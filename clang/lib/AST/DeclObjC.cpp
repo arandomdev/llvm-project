@@ -2245,6 +2245,40 @@ raw_ostream &clang::operator<<(raw_ostream &OS,
 }
 
 //===----------------------------------------------------------------------===//
+// ObjCHookDecl
+//===----------------------------------------------------------------------===//
+
+void ObjCHookDecl::anchor() {}
+
+ObjCHookDecl *
+ObjCHookDecl::Create(ASTContext &C, DeclContext *DC,
+                     ObjCInterfaceDecl *ClassInterface,
+                     ObjCInterfaceDecl *SuperDecl,
+                     SourceLocation nameLoc,
+                     SourceLocation atStartLoc,
+                     SourceLocation superLoc,
+                     SourceLocation IvarLBraceLoc,
+                     SourceLocation IvarRBraceLoc) {
+  if (ClassInterface && ClassInterface->hasDefinition())
+    ClassInterface = ClassInterface->getDefinition();
+  
+  auto *HookDecl = new (C, DC) ObjCHookDecl(DC, ClassInterface, SuperDecl,
+                                            nameLoc, atStartLoc, superLoc,
+                                            IvarLBraceLoc, IvarRBraceLoc);
+
+  if (ClassInterface) {
+    // Link this Hook into its class's hook list.
+    HookDecl->NextClassHook = ClassInterface->getHookListRaw();
+    if (ClassInterface->hasDefinition()) {
+      ClassInterface->setHookListRaw(HookDecl);
+      // LOGOS-TODO: Add ASTMutationListener Code?
+    }
+  }
+
+  return HookDecl;
+}
+
+//===----------------------------------------------------------------------===//
 // ObjCCompatibleAliasDecl
 //===----------------------------------------------------------------------===//
 

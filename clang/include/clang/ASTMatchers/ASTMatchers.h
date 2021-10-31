@@ -1515,6 +1515,16 @@ extern const internal::VariadicDynCastAllOfMatcher<Decl, ObjCInterfaceDecl>
 extern const internal::VariadicDynCastAllOfMatcher<Decl, ObjCImplementationDecl>
     objcImplementationDecl;
 
+/// Matches Objective-C implementation declarations.
+///
+/// Example matches Foo
+/// \code
+///   @hook Foo
+///   @end
+/// \endcode
+extern const internal::VariadicDynCastAllOfMatcher<Decl, ObjCHookDecl>
+    objcHookDecl;
+
 /// Matches Objective-C protocol declarations.
 ///
 /// Example matches FooDelegate

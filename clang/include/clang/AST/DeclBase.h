@@ -58,6 +58,7 @@ class ObjCContainerDecl;
 class ObjCImplDecl;
 class ObjCImplementationDecl;
 class ObjCInterfaceDecl;
+class ObjCHookDecl;
 class ObjCMethodDecl;
 class ObjCProtocolDecl;
 struct PrintingPolicy;
@@ -1856,6 +1857,7 @@ public:
     case Decl::ObjCCategory:
     case Decl::ObjCCategoryImpl:
     case Decl::ObjCImplementation:
+    case Decl::ObjCHook:
     case Decl::ObjCInterface:
     case Decl::ObjCProtocol:
       return true;

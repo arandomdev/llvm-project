@@ -50,6 +50,7 @@ class Expr;
 class ObjCCategoryDecl;
 class ObjCCategoryImplDecl;
 class ObjCImplementationDecl;
+class ObjCHookDecl;
 class ObjCInterfaceDecl;
 class ObjCIvarDecl;
 class ObjCPropertyDecl;
@@ -1204,6 +1205,13 @@ class ObjCInterfaceDecl : public ObjCContainerDecl
     /// and we avoid dynamically-resized arrays in the AST wherever possible.
     ObjCCategoryDecl *CategoryList = nullptr;
 
+    /// List of Hooks defined for this class.
+    ///
+    /// Hooks are stored as a linked list in the AST, since the hooks
+    /// come long after the initial interface declaration, and we avoid
+    /// dynamically-resized arrays in the AST wherever possible.
+    ObjCHookDecl *HookList = nullptr;
+
     /// IvarList - List of all ivars defined by this class; including class
     /// extensions and implementation. This list is built lazily.
     ObjCIvarDecl *IvarList = nullptr;
@@ -1802,6 +1810,22 @@ public:
   /// list.
   void setCategoryListRaw(ObjCCategoryDecl *category) {
     data().CategoryList = category;
+  }
+
+  /// Retrieve the raw pointer to the start of the hook list
+  ObjCHookDecl *getHookListRaw() const {
+    if (!hasDefinition())
+      return nullptr;
+
+    if (data().ExternallyCompleted)
+      LoadExternalDefinition();
+
+    return data().HookList;
+  }
+
+  /// Set the raw pointer to the start of the hook list.
+  void setHookListRaw(ObjCHookDecl *hook) {
+    data().HookList = hook;
   }
 
   ObjCPropertyDecl
@@ -2735,6 +2759,52 @@ public:
 };
 
 raw_ostream &operator<<(raw_ostream &OS, const ObjCImplementationDecl &ID);
+
+/// ObjCHookDecl - Represents a hook definition - this is where
+/// method definitions are specified. For example:
+///
+/// @code
+/// \@hook MyClass
+/// - (void)myMethod { /* do something */ }
+/// \@end
+/// @endcode
+///
+class ObjCHookDecl : public ObjCImplDecl {
+
+  /// Next hook belonging to this class.
+  /// FIXME: this should not be a singly-linked list.  Move storage elsewhere.
+  ObjCHookDecl *NextClassHook = nullptr;
+
+  ObjCHookDecl(DeclContext *DC,
+               ObjCInterfaceDecl *classInterface,
+               ObjCInterfaceDecl *superDecl,
+               SourceLocation nameLoc, SourceLocation atStartLoc,
+               SourceLocation superLoc = SourceLocation(),
+               SourceLocation IvarLBraceLoc=SourceLocation(),
+               SourceLocation IvarRBraceLoc=SourceLocation())
+      : ObjCImplDecl(ObjCHook, DC, classInterface,
+                     classInterface ? classInterface->getIdentifier()
+                                    : nullptr,
+                     nameLoc, atStartLoc) {}
+
+  void anchor() override;
+
+public:
+
+  static ObjCHookDecl *Create(ASTContext &C, DeclContext *DC,
+                              ObjCInterfaceDecl *classInterface,
+                              ObjCInterfaceDecl *superDecl,
+                              SourceLocation nameLoc,
+                              SourceLocation atStartLoc,
+                              SourceLocation superLoc = SourceLocation(),
+                              SourceLocation IvarLBraceLoc=SourceLocation(),
+                              SourceLocation IvarRBraceLoc=SourceLocation());
+
+  static bool classof(const Decl *D) { return classofKind(D->getKind()); }
+  static bool classofKind(Kind K) { return K == ObjCHook; }
+};
+
+raw_ostream &operator<<(raw_ostream &OS, const ObjCHookDecl &ID);
 
 /// ObjCCompatibleAliasDecl - Represents alias of a class. This alias is
 /// declared as \@compatibility_alias alias class.

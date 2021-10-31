@@ -1216,6 +1216,14 @@ bool CursorVisitor::VisitObjCImplementationDecl(ObjCImplementationDecl *D) {
   return VisitObjCImplDecl(D);
 }
 
+bool CursorVisitor::VisitObjCHookDecl(ObjCHookDecl *D) {
+  if (ObjCInterfaceDecl *ID = D->getClassInterface())
+    if (Visit(MakeCursorObjCClassRef(ID, D->getLocation(), TU)))
+      return true;
+  
+  return VisitObjCImplDecl(D);
+}
+
 bool CursorVisitor::VisitObjCPropertyImplDecl(ObjCPropertyImplDecl *PD) {
   if (ObjCIvarDecl *Ivar = PD->getPropertyIvarDecl())
     if (PD->isIvarNameSpecified())
@@ -4868,7 +4876,7 @@ CXStringSet *clang_Cursor_getObjCManglings(CXCursor C) {
     return nullptr;
 
   const Decl *D = getCursorDecl(C);
-  if (!(isa<ObjCInterfaceDecl>(D) || isa<ObjCImplementationDecl>(D)))
+  if (!(isa<ObjCInterfaceDecl>(D) || isa<ObjCImplementationDecl>(D) || isa<ObjCHookDecl>(D)))
     return nullptr;
 
   ASTContext &Ctx = D->getASTContext();
@@ -5191,6 +5199,8 @@ CXString clang_getCursorKindSpelling(enum CXCursorKind Kind) {
     return cxstring::createRef("ObjCClassMethodDecl");
   case CXCursor_ObjCImplementationDecl:
     return cxstring::createRef("ObjCImplementationDecl");
+  case CXCursor_ObjCHookDecl:
+    return cxstring::createRef("objCHookDecl");
   case CXCursor_ObjCCategoryImplDecl:
     return cxstring::createRef("ObjCCategoryImplDecl");
   case CXCursor_CXXMethod:
@@ -6389,6 +6399,7 @@ CXCursor clang_getCursorDefinition(CXCursor C) {
   case Decl::TemplateTemplateParm:
   case Decl::ObjCCategoryImpl:
   case Decl::ObjCImplementation:
+  case Decl::ObjCHook:
   case Decl::AccessSpec:
   case Decl::LinkageSpec:
   case Decl::Export:
@@ -7850,6 +7861,7 @@ static CXLanguageKind getDeclLanguage(const Decl *D) {
   case Decl::ObjCCategoryImpl:
   case Decl::ObjCCompatibleAlias:
   case Decl::ObjCImplementation:
+  case Decl::ObjCHook:
   case Decl::ObjCInterface:
   case Decl::ObjCIvar:
   case Decl::ObjCMethod:

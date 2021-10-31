@@ -84,6 +84,7 @@ def Named : DeclNode<Decl, "named declarations", 1>;
         : DeclNode<ObjCContainer, "Objective-C implementation declarations", 1>;
       def ObjCCategoryImpl : DeclNode<ObjCImpl>;
       def ObjCImplementation : DeclNode<ObjCImpl>;
+      def ObjCHook: DeclNode<ObjCImpl>;
   def ObjCProperty : DeclNode<Named, "Objective-C properties">;
   def ObjCCompatibleAlias : DeclNode<Named>;
 def LinkageSpec : DeclNode<Decl>, DeclContext;

@@ -808,6 +808,8 @@ const internal::VariadicDynCastAllOfMatcher<Decl, ObjCInterfaceDecl>
     objcInterfaceDecl;
 const internal::VariadicDynCastAllOfMatcher<Decl, ObjCImplementationDecl>
     objcImplementationDecl;
+const internal::VariadicDynCastAllOfMatcher<Decl, ObjCHookDecl>
+    objcHookDecl;
 const internal::VariadicDynCastAllOfMatcher<Decl, ObjCProtocolDecl>
     objcProtocolDecl;
 const internal::VariadicDynCastAllOfMatcher<Decl, ObjCCategoryDecl>
