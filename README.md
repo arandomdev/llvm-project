@@ -1,3 +1,5 @@
+This was a very bad attempt at clang logos, I gave up because it was too hard.
+
 # Apple's fork of llvm-project
 
 This is Apple's fork of llvm-project.  For more information on Apple's
